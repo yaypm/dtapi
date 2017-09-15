@@ -8,6 +8,8 @@ var app = express();
 
 var port = 8080;
 
+app.use('/static', express.static(path.join(__dirname, 'static')))
+
 app.use(bodyParser.urlencoded({ extended: true }));	
 require('./app/routes/')(app, {});	
 	
