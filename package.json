@@ -1,7 +1,7 @@
 {
-  "name": "dtbva",
+  "name": "dtapi",
   "version": "1.0.0",
-  "description": "Discover the business value to your Dynatrace relationship",
+  "description": "A nice friendly GUI for Dynatrace APIs",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,11 +9,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yaypm/dtbva.git"
+    "url": "git+https://github.com/yaypm/dtapi.git"
   },
   "keywords": [
     "dynatrace",
-    "bva"
+    "api"
   ],
   "dependencies": {
     "bluebird": "^3.5.0",
@@ -26,10 +26,10 @@
   "engines": {
     "node": "6.11.3"
   },
-  "author": "Alistair Emslie and Nick Ross",
+  "author": "Alistair Emslie",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/yaypm/dtbva/issues"
+    "url": "https://github.com/yaypm/dtapi/issues"
   },
-  "homepage": "https://github.com/yaypm/dtbva#readme"
+  "homepage": "https://github.com/yaypm/dtapi#readme"
 }

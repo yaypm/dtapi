@@ -2,53 +2,430 @@
 <head>
 <link rel="stylesheet" type="text/css" href='/static/main.css' />
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
 <link rel="icon" href="https://dt-cdn.net/assets/images/brand/favicon-63e287af7c.ico">
 <script>
-function switchSubNav(divId) {
-	menu = document.getElementById("fullroi");
-	i = 0;
 
-	while(menu.children[i] != undefined) {
+			$(function () {
+				
+				blankData = [];
+				
+				var now = new Date;
+				var rightNow = now.getTime();
+				var first = rightNow - 3600000;
+				
+				blankData.push([first, 100]);
+				
+				for(i=1; i < 12; i++) {
+					blankData.push([(first + 300000 * i), 100]);
+				}	
+			
+				var myChart = Highcharts.chart('container', {
+						title: {
+							style: {
+								color: "#ffffff"
+							},
+							text: ''
+						},
+					
+					exporting: {
+						enabled: false
+					},
+					
+					plotOptions: {
+						line: {
+							marker: {
+								enabled: false
+							},
+						},
+					},
+					
+					chart: {
+						backgroundColor: "#ffffff",
+						borderColor: "#ffffff",
+						borderRadius: 3,
+						borderWidth: 2,
+						spacingBottom: 5,
+						spacingTop: 5,
+						spacingLeft: 1,
+						spacingRight: 5,	
 
-		if(menu.children[i].id == divId) {
-			$( '#' + menu.children[i].id ).addClass("is-current");
-			$("#c_" + menu.children[i].id).fadeIn();
+						update: {
+							redraw: false
+						},						
+					},	
+					
+					credits: {
+						enabled: false
+					},
+					
+					yAxis: {
+							title: {
+								text: 'Response Time (ms)',
+								style: {
+									color: "#000000"
+								}
+							},
+							
+							min: 0,
+							max: 50,
+							
+							labels: {
+								style: {
+									color: "#000000"
+								}
+							}
+					},
+					
+					xAxis: {
+							type: 'datetime',
 
-			if(menu.children[i].id == "fullroi_input") {
-				$( '#fullroi_input_prod_cont' ).fadeIn;
-			}
-		}
+							labels: {
+								style: {
+									color: "#000000"
+								}
+							},
+							
+							title: {
+								style: {
+									color: "#000000"
+								},
+							enabled: false
+						}
+					},
+					
+					legend: {
+						enabled: false
+				},
 
-		else {
-			$( '#' + menu.children[i].id ).removeClass("is-current");
-			$("#c_" + menu.children[i].id).fadeOut();
-		}
-
-		i++;
-	}
-
-}
+					series: [{
+						type: 'line',
+						forced: 'true',
+						name: 'Time (ms)',
+						data: blankData
+					}]
+				});
+			});
 
 function switchTab (divId) {
 	menu = document.getElementById("c_fullroi_input");
 	i = 1;
-
+		
 	while(menu.children[i] != undefined) {
-
+		
 		if(menu.children[i].id == divId + "_cont") {
 			$( '#' + menu.children[i].id ).addClass("is-active");
 			$( '#' + menu.children[i].id).fadeIn();
 		}
-
+		
 		else {
 			$( '#' + menu.children[i].id ).removeClass("is-active");
 			$( '#' + menu.children[i].id).css("display", "none");
 		}
-
+	
 		i++;
 	}
+	
+	
+}
 
+function getActiveTests() {
+	var testListArray = [];
+	
+	var myHeaders = new Headers();
 
+	var myInit = { method: 'GET',
+        headers: myHeaders,
+        mode: 'cors',
+        cache: 'default' };
+		
+	fetch('http://localhost:8080/activeTests', myInit)
+		
+		.then(function(response) {	
+			return response.json();
+		})
+		
+		.then(function(jsonResult) {
+			var monitorArray = jsonResult.Monitors;	
+			//$('#testListSpinner').removeClass('spinner');
+			//document.getElementById("getTests").blur();
+			
+			for (i = 0; i < monitorArray.length; i++) {
+				
+				var testName = monitorArray[i].Monitor.tname;
+				var monitorId = monitorArray[i].Monitor.monitorID;
+				
+				var x = document.getElementById("testName_ort");
+				var option = document.createElement("option");
+				option.text = testName;
+				option.value= monitorId;
+				
+
+				x.add(option);
+				
+			}
+			
+			//$( "#testName_ort" ).selectmenu( "refresh" );	
+			$('#b_testName').prop('disabled', false); $('#b_testName > svg').css('display', 'none');
+		})
+	
+};
+
+function getObjectList() {
+var resultArray = [];
+	
+	var myHeaders = new Headers();
+	
+	myHeaders.append("Content-Type", "application/json");
+	myHeaders.append("Accept", "application/json");
+
+	var username = document.getElementById("username").value;
+	var password = document.getElementById("password").value;
+	var monitorId = document.getElementById("testName_ort").value;
+	
+	var now = new Date;
+	var rightNow = now.getTime();
+	
+	switch (document.getElementById("timeframe_ort").value) {
+		case "15mins": startTime = new Date(now - 60000 * 15); startTime = startTime.getTime(); break;
+		case "30mins": startTime = new Date(now - 60000 * 30); startTime = startTime.getTime(); break;
+		case "1hour": startTime = new Date(now - 60000 * 60); startTime = startTime.getTime(); break;
+		case "6hours": startTime = new Date(now - 60000 * 360); startTime = startTime.getTime(); break;
+		case "12hours": startTime = new Date(now - 60000 * 720); startTime = startTime.getTime(); break;
+		default: break;
+	}
+	
+	var endTime = rightNow;
+	
+		var myInit = { method: 'POST',
+        headers: myHeaders,
+        mode: 'cors',
+        cache: 'default',
+		body: JSON.stringify({"username": username, "password": password, "monitorId":monitorId, "endTime": endTime, "startTime": startTime})};
+	
+		fetch('http://localhost:8080/getObjectResults', myInit)
+		
+		.then(function(response) {	
+			return response.json();
+		})
+		
+		.then(function(jsonResult) {
+			//$('#objectListSpinner').removeClass('spinner');
+			//document.getElementById("submitRequest").blur();
+			
+			var testArray = jsonResult.BackboneData.ObjectLevelData;
+			
+			//alert(testArray.length);
+			
+			for (i = 0; i < testArray.length; i++) {
+			
+				var check = 0;
+			
+					for (a=0; a < resultArray.length; a++){
+						if(resultArray[a] == testArray[i].objectData.upage) {
+							check += 1;	
+						}	
+						
+					}
+				if (check == 0) {
+					resultArray.push(testArray[i].objectData.upage);
+				}	
+				
+			}
+			
+			//alert(resultArray.length);
+			
+			//alert(resultArray);
+			
+			for (i = 0; i < resultArray.length; i++) {
+				
+				var objectName = resultArray[i];
+				
+				var x = document.getElementById("objectName_ort");
+				var option = document.createElement("option");
+				option.text = objectName;
+				option.value= objectName;
+				
+
+				x.add(option);
+				
+			}
+			
+			$('#b_objectName').prop('disabled', false); $('#b_objectName > svg').css('display', 'none');
+			//$( "#objectName_ort" ).selectmenu( "refresh" );
+		})	
+}	
+
+function processResults() {
+	
+	var resultArray = [];
+	
+	var myHeaders = new Headers();
+	
+	myHeaders.append("Content-Type", "application/json");
+	myHeaders.append("Accept", "application/json");
+
+	var username = document.getElementById("username").value;
+	var password = document.getElementById("password").value;
+	var monitorId = document.getElementById("testName_ort").value;
+	var objectId = document.getElementById("objectName_ort").value;
+	
+	var now = new Date;
+	var rightNow = now.getTime();
+	
+	switch (document.getElementById("timeframe_ort").value) {
+		case "15mins": startTime = new Date(now - 60000 * 15); startTime = startTime.getTime(); break;
+		case "30mins": startTime = new Date(now - 60000 * 30); startTime = startTime.getTime(); break;
+		case "1hour": startTime = new Date(now - 60000 * 60); startTime = startTime.getTime(); break;
+		case "6hours": startTime = new Date(now - 60000 * 360); startTime = startTime.getTime(); break;
+		case "12hours": startTime = new Date(now - 60000 * 720); startTime = startTime.getTime(); break;
+		default: break;
+	}
+	
+	var endTime = rightNow;
+	
+	var formData  = new FormData();
+	
+	//formData.append(username, "asdasd");
+	
+	var mids = [];
+	
+		var myInit = { method: 'POST',
+				headers: myHeaders,
+				mode: 'cors',
+				cache: 'default',
+				body: JSON.stringify({"username": username, "password": password, "monitorId":monitorId, "endTime": endTime, "startTime": startTime})
+			};
+		
+		
+	
+	
+	
+		//fetch('http://localhost/getObjectResults?monitorId=' + monitorId + '&startTime=' + startTime + '&endTime=' + endTime , myInit)
+		fetch('http://localhost:8080/getObjectResults', myInit)
+		
+		.then(function(response) {	
+			return response.json();
+		})
+		
+		.then(function(jsonResult) {
+			//$('#objectResultsSpinner').removeClass('spinner');
+			//document.getElementById("submitRequest").blur();
+			
+			//var testResult = jsonResult.BackboneData.ObjectLevelData[0].objectData.mid;
+			
+			var testArray = jsonResult.BackboneData.ObjectLevelData;
+			
+			var latest = 0;
+			
+			for (i = 0; i < testArray.length; i++) {
+				latest += parseInt(testArray[i].objectData.rtime);
+				
+				var object = testArray[i].objectData.upage;
+				
+				if (object == objectId) {
+					resultArray.push([parseInt(testArray[i].objectData.ttime),parseInt(testArray[i].objectData.rtime)]);
+				}
+			}
+			
+			objAvg = latest / testArray.length;
+			
+			document.getElementById("rawJson").value=JSON.stringify(jsonResult);
+			document.getElementById("rawApi").value='https://datafeed-api.dynatrace.com/publicapi/rest/v1.0/testresults/' + monitorId + '?start=' + startTime + '&end=' + endTime + '&detailLevel=OBJECT';
+			$('body > div:nth-child(2) > div > div:nth-child(2) > div > div.loading').css('display','none');
+			//document.getElementById("object").value=testArray.length;
+			
+			processResults(); $('#b_processResults').prop('disabled', false); $('#b_processResults > svg').css('display', 'none');
+			
+			//DRAW HIGHCHART
+			$(function () {
+	
+				var myChart = Highcharts.chart('container', {
+						title: {
+							style: {
+								color: "#ffffff"
+							},
+							text: ''
+						},
+					
+					exporting: {
+						enabled: false
+					},
+					
+					plotOptions: {
+						line: {
+							marker: {
+								enabled: false
+							},
+						},
+					},
+					
+					chart: {
+						backgroundColor: "#ffffff",
+						borderColor: "#ffffff",
+						borderRadius: 3,
+						borderWidth: 2,
+						spacingBottom: 5,
+						spacingTop: 5,
+						spacingLeft: 1,
+						spacingRight: 5,	
+
+						update: {
+							redraw: false
+						},						
+					},	
+					
+					credits: {
+						enabled: false
+					},
+					
+					yAxis: {
+							title: {
+								text: 'Response Time (ms)',
+								style: {
+									color: "#000000"
+								}
+							},
+							
+							labels: {
+								style: {
+									color: "#000000"
+								}
+							}
+					},
+					
+					xAxis: {
+							type: 'datetime',
+
+							labels: {
+								style: {
+									color: "#000000"
+								}
+							},
+							
+							title: {
+								style: {
+									color: "#000000"
+								},
+							enabled: false
+						}
+					},
+					
+					legend: {
+						enabled: false
+				},
+
+					series: [{
+						type: 'line',
+						forced: 'true',
+						name: 'Time (ms)',
+						//data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
+						data: resultArray
+					}]
+				});
+			});
+		});
 }
 
 </script>
@@ -58,48 +435,26 @@ function switchTab (divId) {
 <!--start of nav bar-->
 <div>
 
-<div class="nav" style="margin-bottom: 20px;">
+<div class="nav has-no-secondary">
   <a class="nav__brand" href="/">
     <img class="nav__logo" src="http://assets.dynatrace.com/global/logos/dynatrace-logo.svg" alt="dynatrace logo"/>
   </a>
   <div class="nav__buttongroup">
-
-    <a class="nav__btn nav__btn--cta" href="https://www.dynatrace.com/trial/">Free trial</a>
-    <button data-target="#nav-bar-example3" class="nav__btn nav__btn--menutoggle">Menu</button>
+    <button data-target="#nav-bar-example1" class="nav__btn nav__btn--menutoggle">Menu</button>
   </div>
-  <nav id="nav-bar-example3" class="nav__bar">
+  <nav id="nav-bar-example1" class="nav__bar">
     <ul class="nav__list nav__list--primary">
-      <li class="nav__item expandable expandable--nav">
-        <a class="nav__link expandable__trigger" href="#noop">Simple Business Value Analysis</a>
-        <ul class="nav__list nav__list--secondary expandable__content">
-          <li class="nav__item">
-            <a class="nav__link " href="#noop">Introduction</a>
-          </li>
-          <li class="nav__item">
-            <a class="nav__link" href="#noop">Data input</a>
-          </li>
-          <li class="nav__item">
-            <a class="nav__link" href="#noop">Report overview</a>
-          </li>
-        </ul>
+      <li class="nav__item">
+        <a class="nav__link" href="#noop">Dynatrace</a>
       </li>
-      <li class="nav__item expandable expandable--nav is-current">
-        <a class="nav__link expandable__trigger" onclick="openFullRoi()" href="#noop">Detailed Business Value Analysis</a>
-        <ul id="fullroi" class="nav__list nav__list--secondary expandable__content">
-          <li id="fullroi_intro" class="nav__item is-current" onclick="switchSubNav(this.id)">
-            <a class="nav__link" href="#noop">Introduction</a>
-          </li>
-          <li id="fullroi_input" class="nav__item" onclick="switchSubNav(this.id)">
-            <a class="nav__link" href="#noop">Data input</a>
-          </li>
-          <li id="fullroi_report" class="nav__item" onclick="switchSubNav(this.id)">
-            <a class="nav__link" href="#noop">Report overview</a>
-          </li>
-        </ul>
+      <li class="nav__item is-current">
+        <a class="nav__link" href="#noop">Advanced Synthetic</a>
       </li>
-
-      <li class="nav__item nav__item--right">
-        <a class="nav__link" href="#noop">Login</a>
+      <li class="nav__item">
+        <a class="nav__link" href="#noop">DC RUM</a>
+      </li>
+      <li class="nav__item">
+        <a class="nav__link" href="#noop">AppMon</a>
       </li>
     </ul>
   </nav>
@@ -113,137 +468,128 @@ function switchTab (divId) {
 <!--start of content-->
 <div style="position: relative; width: 100%; ">
 
-	<!--full roi-->
-
-		<!--introduction-->
-		<div id="c_fullroi_intro" style="position: absolute;">
-
-		<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-		<div class="loading">
-		<svg class="loading__distractor" width="30px" height="30px" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
-		<circle class="loading__path" cx="15" cy="15" r="12"></circle>
-		</svg>
-		<p class="loading__text">Loading...</p>
-		</div>
-		</div>
-
-		</div>
-
-		<!--data input-->
-		<div id="c_fullroi_input" class="non-primary" style="position: absolute; width: 100%;">
-
-
-		<div class="tabs" style="width: 100%; ">
-		<button id="fullroi_input_org" class="tab is-active" onclick="switchTab(this.id)">Organisation information</button>
-		<button id="fullroi_input_prod" class="tab" onclick="switchTab(this.id)">Product cost</button>
-		<button id="fullroi_input_bus" class="tab" onclick="switchTab(this.id)">Business impact</button>
-		</div>
-
-			<!--organisation information-->
-			<div id="fullroi_input_org_cont">
-				<div style="width: 500px; margin-left: 50px; margin-top: 50px;">
-				Tell us about your organisation:
-				<br /><br />
-				<label for="i0" class="label">Name</label><input type="text" class="inputfield" id="i0"/>
-				<br /><br />
-				<label for="i1" class="label">How many business days does the typical business user or IT resource work per year?</label><input type="text" class="inputfield" placeholder="220" id="i1"/>
-				<br /><br />
-				<label for="i2" class="label">How many hours per day does the average IT resource work?</label><input type="text" class="inputfield" placeholder="7.5" id="i2"/>
-				<br /><br />
-				<label for="i3" class="label">What is the average salary for an IT staff member?
-</label><input class="slider" id="i0" type="range" min="0" max="100000" value="65000">
-				<p class="hint" id="i3">Gartner recommends £65,000</p>
-				<br /><br />
-				<label for="i4" class="label">Favourite UK grime artist</label><input type="text" class="inputfield" id="i4"/>
-				<br /><br />
-				<button role="button" type="button" class="btn btn--primary">Get hyper</button>
+<div class="section">
+  <div class="column--1-of-2">
+  <div style="margin-left: 50px; margin-bottom: 50px;">
+    <h3>Login</h3>
+	<br />
+    <label for="username" class="label">Username</label><input type="text" class="inputfield" id="username" style="width: 40%;"/>
+	<br /><br />
+	<label for="password" class="label">Password</label><input type="password" class="inputfield" id="password" style="width: 40%;"/>
+	<br /><br />
+	
+	
+	<h3>Options</h3>
+	<br />
+	<div class="tabs" style="width: 100%; ">
+		<button id="fullroi_input_org" class="tab is-active" onclick="switchTab(this.id)">Object response time</button>
+		<button id="fullroi_input_prod" class="tab" onclick="switchTab(this.id)">Object offset time</button>
+		<button id="fullroi_input_bus" class="tab" onclick="switchTab(this.id)">Test response time</button>
+	</div>
+	
+		<table style="width: 100%;">
+			<tr>
+			<td>
+				<div style="margin-top: 50px;">
+				<label for="timeframe_ort" class="label">Time frame</label>
+						<select name="timeframe_ort" class="select" id="timeframe_ort">
+							<option value="15mins">Last 15 mins</option>
+							<option value="30mins">Last 30 mins</option>
+							<option value="1hour" selected="selected">Last hour</option>
+							<option value="6hours">Last 6 hours</option>
+							<option value="12hours">Last 12 hours</option>
+						</select>
 				</div>
-			</div>
-			<!--product cost-->
-			<div id="fullroi_input_prod_cont" class="non-primary">
-				<div style="width: 500px; margin-left: 50px; margin-top: 50px;">
-				<label for="s1" class="label">Have you ever?</label>
-					<select class="select" id="s1">
-					  <option value="Banana" selected="selected">Told on a fella</option>
-					  <option value="Ananas">Squeezed a trigga</option>
-					  <option value="Papaya">Set a fella up</option>
-					  <option value="Kiwi">Helped a fella out when he was down on his luck</option>
+			</td>
+
+			<td style="width: 60%;">
+			</td>
+			
+			</tr>
+
+			<tr>
+			<td >	
+				<div style="margin-top: 50px;">
+				<label for="testName_ort" class="label">Choose a test...</label>
+					<select class="select" id="testName_ort">
+
 					</select>
-				</div>
-			</div>
-			<!--business impact-->
-			<div id="fullroi_input_bus_cont" class="non-primary">
-				<div style="width: 500px; margin-left: 50px; margin-top: 50px;">
-					<label for="i1" class="label">Thoughts and feelings</label><textarea rows="4" cols="50" class="textarea" placeholder="Tell me about your day..." id="i1"></textarea>
-				</div>
-			</div>
+				</div>				
+			</td>
+			
+			<td style="width: 60%;">
+				<button role="button" type="button" id="b_testName" onclick="getActiveTests(); $('#b_testName').prop('disabled', true); $('#b_testName > svg').css('display', 'inline-block');" class="btn btn--secondary" style="width: 120px; margin-left: 5%; transform: translate(0, 110%);"> 
+				
+				<svg class="loading__distractor loading__distractor--small" style="display: none;" width="15px" height="15px" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+				<circle class="loading__path" cx="15" cy="15" r="12"></circle>
+				</svg>
+			Get tests
+			</button>
+			</td>
+			
+			</tr>
+			<td style="width: 40%;">
+				<div style="margin-top: 50px;">
+				<label for="objectName_ort" class="label">Choose an object...</label>
+					<select class="select" id="objectName_ort">
 
-		</div>
+					</select>
+				</div>	
+			</td>
 
-		<!--report-->
-		<div id="c_fullroi_report" class="non-primary" style="position: absolute; width: 100%;" >
-		<div style="width: 800px; margin-left: 50px; margin-top: 50px;">
+			<td style="width: 60%;">
+				<button role="button" type="button" id="b_objectName" onclick="getObjectList(); $('#b_objectName').prop('disabled', true); $('#b_objectName > svg').css('display', 'inline-block');" class="btn btn--secondary" style="width: 120px;margin-left: 5%; transform: translate(0, 110%);">
+				<svg class="loading__distractor loading__distractor--small" style="display: none;" width="15px" height="15px" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+				<circle class="loading__path" cx="15" cy="15" r="12"></circle>
+				</svg>
+				Load objects</button>
+			</td>
+			
+			</tr>
+			
+			<tr>
+			<td>
+				<button role="button" type="button" id="b_processResults" onclick="processResults(); $('#b_processResults').prop('disabled', true); $('#b_processResults > svg').css('display', 'inline-block'); $('body > div:nth-child(2) > div > div:nth-child(2) > div > div.loading').css('display','block');" class="btn btn--primary" style="margin-top: 50px;">
+				<svg class="loading__distractor loading__distractor--small" style="display: none;" width="15px" height="15px" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+				<circle class="loading__path" cx="15" cy="15" r="12"></circle>
+				</svg>
+				Get results</button>
+			</td>
+			</tr>
+		</table>		
+  </div>
+  </div>
+  <div class="column--1-of-2">
+  <div style="margin-left: 50px;">
+    <h3>Results</h3>
+	<br />
+	
+	<div class="loading" style="position: absolute; margin-top: 150px; margin-left: 150px; transform: translate(45px, -25px); z-index: 10; display: none;">
+	<svg class="loading__distractor" width="30px" height="30px" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+    <circle class="loading__path" cx="15" cy="15" r="12"></circle>
+	</svg>
+	<p class="loading__text">Loading...</p>
+	</div>
+	
+	
+	
+    <div id="container" style="float: left; height: 300px; width: 550px;margin-bottom: 50px;">
+	
+	
 
-		<table class="table table--expandable" data-behavior="accordion">
-			  <thead>
-				<tr>
-				  <th>Application</th>
-				  <th>Number of users</th>
-				  <th>Reponse time</th>
-				  <th>Details</th>
-				</tr>
-			  </thead>
-			  <tbody class="expandable">
-				<tr>
-				  <td>Dynatrace Website</td>
-				  <td>1,670</td>
-				  <td>3.2s</td>
-				  <td><a href="#" class="expandable__trigger"></a></td>
-				</tr>
-				<tr class="expandable__content">
-				  <td colspan="5">
-					Some expandable content...
-				  </td>
-				</tr>
-			  </tbody>
-			  <tbody class="expandable is-active">
-				<tr>
-				  <td>Dynatrace Community</td>
-				  <td>5,678</td>
-				  <td>5.6s</td>
-				  <td><a href="#" class="expandable__trigger"></a></td>
-				</tr>
-				<tr class="expandable__content">
-				  <td colspan="5">
-					More expandable content...
-				  </td>
-				</tr>
-			  </tbody>
-			  <tbody>
-				<tr>
-				  <td>Dynatrace Support</td>
-				  <td>2,480</td>
-				  <td>4.6s</td>
-				  <td><a href="#" class="expandable__trigger"></a></td>
-				</tr>
-			  </tbody>
-			  <tbody class="expandable">
-				<tr>
-				  <td>Dynatrace Eservices</td>
-				  <td>509</td>
-				  <td>1.2s</td>
-				  <td><a href="#" class="expandable__trigger"></a></td>
-				</tr>
-				<tr class="expandable__content">
-				  <td colspan="5">
-					More expandable content...
-				  </td>
-				</tr>
-			  </tbody>
-			</table>
+	</div>
+	<br /><br />
+	<div style="width: 520px; margin-left: 30px; margin-bottom: 30px;">
+	<label for="rawJson" class="label">JSON response</label><textarea style="overflow: auto;" rows="7" cols="5" class="textarea" placeholder="Raw JSON response goes here..." id="rawJson"></textarea>
+	</div>
+	
+	<div style="width: 520px; margin-left: 30px; margin-bottom: 50px;">
+	<label for="rawApi" class="label">API call made</label><textarea style="overflow: auto;" rows="2" cols="5" class="textarea" placeholder="The actual API call will go here..." id="rawApi"></textarea>
+	</div>
+  </div>	
+  </div>
+</div>
 
-		</div>
-		</div>
 
 </div>
 <!--end of content-->
