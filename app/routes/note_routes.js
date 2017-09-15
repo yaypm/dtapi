@@ -1,6 +1,7 @@
 var request = require('request-promise');
 var express = require('express');
 const bodyParser = require('body-parser');
+var path = require('path');
 
 module.exports = function(app, db) {
 	//GET OBJECT LEVEL RESULTS
