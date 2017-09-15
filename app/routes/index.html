@@ -140,7 +140,7 @@ function getActiveTests() {
         mode: 'cors',
         cache: 'default' };
 		
-	fetch('http://localhost:8080/activeTests', myInit)
+	fetch('/activeTests', myInit)
 		
 		.then(function(response) {	
 			return response.json();
@@ -204,7 +204,7 @@ var resultArray = [];
         cache: 'default',
 		body: JSON.stringify({"username": username, "password": password, "monitorId":monitorId, "endTime": endTime, "startTime": startTime})};
 	
-		fetch('http://localhost:8080/getObjectResults', myInit)
+		fetch('/getObjectResults', myInit)
 		
 		.then(function(response) {	
 			return response.json();
@@ -303,7 +303,7 @@ function processResults() {
 	
 	
 		//fetch('http://localhost/getObjectResults?monitorId=' + monitorId + '&startTime=' + startTime + '&endTime=' + endTime , myInit)
-		fetch('http://localhost:8080/getObjectResults', myInit)
+		fetch('/getObjectResults', myInit)
 		
 		.then(function(response) {	
 			return response.json();

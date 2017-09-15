@@ -11,7 +11,7 @@ var port = 8080;
 app.use(bodyParser.urlencoded({ extended: true }));	
 require('./app/routes/')(app, {});	
 	
-app.listen(port, () => {
+app.listen(process.env.PORT, () => {
   console.log('We are live on ' + port);
 });	
 	
