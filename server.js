@@ -13,8 +13,8 @@ app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use(bodyParser.urlencoded({ extended: true }));	
 require('./app/routes/')(app, {});	
 	
-app.listen(8020, () => {
-  console.log('We are live on ' + 8020);
+app.listen(8080, () => {
+  console.log('We are live on ' + 8080);
 });	
 	
 	
