@@ -13,7 +13,7 @@ app.use('/static', express.static(path.join(__dirname, 'static')));
 app.use(bodyParser.urlencoded({ extended: true }));	
 require('./app/routes/')(app, {});	
 	
-app.listen(process.env.PORT, () => {
+app.listen(port, () => {
   console.log('We are live on ' + port);
 });	
 	
